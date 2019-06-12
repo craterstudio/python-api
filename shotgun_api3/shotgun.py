@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
  -----------------------------------------------------------------------------
- Copyright (c) 2009-2019, Shotgun Software Inc.
+ Copyright (c) 2009-2018, Shotgun Software Inc.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -92,7 +92,7 @@ except ImportError, e:
 
 # ----------------------------------------------------------------------------
 # Version
-__version__ = "3.0.40"
+__version__ = "3.0.37"
 
 # ----------------------------------------------------------------------------
 # Errors
@@ -693,29 +693,12 @@ class Shotgun(object):
         Get API-related metadata from the Shotgun server.
 
         >>> sg.info()
-        {'full_version': [8, 2, 1, 0], 'version': [8, 2, 1], 'user_authentication_method': 'default', ...}
-
-        Tokens and values
-        -----------------
-
-        ::
-
-            Token                       Value
-            --------                    ---------
-            full_version                An ordered array of the full Shotgun version.
-                                        [major, minor, patch, hotfix]
-            version                     An ordered array of the Shotgun version.
-                                        [major, minor, patch]
-            user_authentication_method  Indicates the authentication method used by Shotgun.
-                                        Will be one of the following values:
-                                            default: regular username/password.
-                                            ldap:    username/password from the company's LDAP.
-                                            saml2:   SSO used, over SAML2.
+        {'full_version': [6, 3, 15, 0], 'version': [6, 3, 15], ...}
 
         .. note::
 
-            Beyond the documented tokens, you should expect
-            the other values to be unsupported and for internal use only.
+            Beyond ``full_version`` and ``version`` which differ by the inclusion of the bugfix number, you should expect
+            these values to be unsupported and for internal use only.
 
         :returns: dict of the server metadata.
         :rtype: dict
@@ -2553,9 +2536,11 @@ class Shotgun(object):
             self.set_up_auth_cookie()
 
         try:
+            # Crater Change, again, they forgot to handle proxy
+            opener = self._build_opener(urllib2.HTTPHandler)
             request = urllib2.Request(url)
             request.add_header('user-agent', "; ".join(self._user_agents))
-            req = urllib2.urlopen(request)
+            req = opener.open(request)
             if file_path:
                 shutil.copyfileobj(req, fp)
             else:
@@ -3119,8 +3104,7 @@ class Shotgun(object):
         if self.config.proxy_handler:
             handlers.append(self.config.proxy_handler)
 
-        if handler is not None:
-            handlers.append(handler)
+        handlers.append(handler)
         return urllib2.build_opener(*handlers)
 
     def _turn_off_ssl_validation(self):
@@ -3828,6 +3812,8 @@ class Shotgun(object):
         :rtype: str
         """
         try:
+            # opener = urllib2.build_opener(urllib2.HTTPHandler)
+            # Crater Change - they forgot to build opener with proxy hendler
             opener = self._build_opener(urllib2.HTTPHandler)
 
             request = urllib2.Request(storage_url, data=data)
@@ -4040,9 +4026,7 @@ class FormPostHandler(urllib2.BaseHandler):
             buffer.write('Content-Type: %s\r\n' % content_type)
             buffer.write('Content-Length: %s\r\n' % file_size)
             fd.seek(0)
-            buffer.write('\r\n')
-            shutil.copyfileobj(fd, buffer)
-            buffer.write('\r\n')
+            buffer.write('\r\n%s\r\n' % fd.read())
         buffer.write('--%s--\r\n\r\n' % boundary)
         buffer = buffer.getvalue()
         return boundary, buffer

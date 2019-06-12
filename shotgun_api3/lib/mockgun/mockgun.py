@@ -607,8 +607,6 @@ class Shotgun(object):
                 return lval.startswith(rval)
             elif operator == "ends_with":
                 return lval.endswith(rval)
-            elif operator == "not_in":
-                return lval not in rval
         elif field_type == "entity":
             if operator == "is":
                 # If one of the two is None, ensure both are.
