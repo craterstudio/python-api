@@ -2553,14 +2553,15 @@ class Shotgun(object):
             self.set_up_auth_cookie()
 
         try:
+            # Crater Change, again, they forgot to handle proxy
+            opener = self._build_opener(urllib2.HTTPHandler)
             request = urllib2.Request(url)
             request.add_header('user-agent', "; ".join(self._user_agents))
-            req = urllib2.urlopen(request)
+            req = opener.open(request)
             if file_path:
                 shutil.copyfileobj(req, fp)
             else:
-                attachment = req.read()
-        # 400 [sg] Attachment id doesn't exist or is a local file
+                attachment = req.read()ist or is a local file
         # 403 [s3] link is invalid
         except urllib2.URLError, e:
             if file_path:
