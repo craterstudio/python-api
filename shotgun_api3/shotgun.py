@@ -2561,7 +2561,8 @@ class Shotgun(object):
             if file_path:
                 shutil.copyfileobj(req, fp)
             else:
-                attachment = req.read()ist or is a local file
+                attachment = req.read()
+        # 400 [sg] Attachment id doesn't exist or is a local file
         # 403 [s3] link is invalid
         except urllib2.URLError, e:
             if file_path:
